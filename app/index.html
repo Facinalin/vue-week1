@@ -7,7 +7,7 @@ current: index
 
 <div class="container">
   <div id="app">
-    <div class="container">
+    <div class="container" v-if="ifLoggedIn">
       <div class="row py-3">
         <div class="col-md-7">
           <h2>產品列表</h2>
@@ -83,12 +83,20 @@ current: index
         </div>
       </div>
     </div>
+    <div class="notLogged text-secondary" v-else="ifLoggedIn">
+      <h2>請登入才能查看產品頁面！</h2>
+    </div>
   </div>
 </div>
 
+<script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.9.1/axios.min.js'
+integrity='sha512-Xk3wWei2TGrsh9kDSBKUMIjw/86sLUvhtnv9f7fOuIwhhiUTKz8szkWkzHthrM5Bb3Bu9idSzkxOrkzhcneuiw=='
+crossorigin='anonymous'></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
 <script type="module">
+  const api_Url = 'https://vue3-course-api.hexschool.io/v2/';
+  const api_Path = 'lk1025cina';
   //記得加上type="module"
   //引入Vue cdn 方法
   const { createApp } = Vue;
@@ -145,7 +153,9 @@ current: index
     ]
   }
 ]
-
+const cookieToken = document.cookie.replace(/(?:(?:^|.*;\s*)signInToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+axios.defaults.headers.common['Authorization'] = cookieToken;
+ //axios.get外部資料
  //Vue Option API 架構
  const App = {
   //資料
@@ -154,7 +164,9 @@ current: index
       //產品集合資料格式;
       products:[],
       //單一產品物件
-      tempProduct:{}
+      tempProduct:{},
+      //是否登入
+      ifLoggedIn:false
     }
   },
   //方法函式
@@ -171,13 +183,37 @@ current: index
       const deleteId = this.products.findIndex(el => el.id == item.id)
       this.products.splice(deleteId, 1);
       this.tempProduct = {};
+    },
+    checkLogged(){
+      axios.post(`${api_Url}api/user/check`)
+        .then(res=>{
+            console.log(res.data);
+            this.ifLoggedIn = true;
+        })
+        .catch(err =>{
+            console.log(err.data);
+            alert('你尚未登入，無權限觀看產品。')
+            location.href = '/signIn.html';
+        })
+    },
+    axiosGet(){
+      //https://vue3-course-api.hexschool.io/v2/api/lk1025cina/products/all
+      axios.get(`${api_Url}api/${api_Path}/products/all`)
+      .then(res=>{
+        console.log(res.data.products);
+        this.products = res.data.products;
+      })
+      .catch(err=>{
+        console.log(err.data)
+      })
     }
 
   },
   //生命週期
-  //prior: 引入外部資料
   created(){
-   this.products = products;
+   this.checkLogged();
+   //this.products = products;
+   this.axiosGet();
   }
  }
 //生成元件，掛載到html元素
