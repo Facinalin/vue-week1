@@ -33,7 +33,7 @@
 
     
 <div class="container">
-  <div id="app">
+  <div id="appTest">
     <div class="container">
       <div class="text-end mt-4">
         <button class="btn btn-primary" id="modalBtn">
@@ -227,11 +227,9 @@ crossorigin='anonymous'></script>
     console.log('你有點到');
   })
 
-  
-  const test = document.querySelector('#modalBtn');
   const modal = document.getElementById('productModal');
   const myModal = new bootstrap.Modal(modal);
-  console.log(modalBtn, modal, myModal,test);
+  console.log(modalBtn, modal, myModal);
   //可用方法：myModal.toggle/ myModal.show/ myModal.hide
 
   //記得加上type="module"
@@ -295,7 +293,7 @@ crossorigin='anonymous'></script>
   }
  }
 //生成元件，掛載到html元素
- createApp(App).mount('#app');
+ createApp(App).mount('#appTest');
 
 </script>
 
@@ -304,42 +302,6 @@ crossorigin='anonymous'></script>
    
     <script src="./assets/js/vendors.js"></script>
     <script src="./assets/js/all.js"></script>
-    <script type="module">
-    const api_Url = 'https://vue3-course-api.hexschool.io/v2/';
-    const api_Path = 'lk1025cina';
-      const cookieToken = document.cookie.replace(/(?:(?:^|.*;\s*)signInToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-      axios.defaults.headers.common['Authorization'] = cookieToken;
-      //調用Vue
-      const { createApp } = Vue;
-      //元件
-      const nav = {
-       data(){
-        return{
-        //是否登入
-        ifLoggedIn:false
-        }
-       },
-       methods:{
-        //檢查是否登入
-        checkLogged(){
-      axios.post(`${api_Url}api/user/check`)
-        .then(res=>{
-            console.log(res.data);
-            this.ifLoggedIn = true;
-        })
-        .catch(err =>{
-            console.log(err.data);
-        })
-    }
-       },
-       //生命週期：初始化
-       mounted(){
-       this.checkLogged();
-       }
-      }
-      //生成元件＋綁定html元素
-      createApp(nav).mount('#navBar')
-    </script>
   </body>
 
 </html>
