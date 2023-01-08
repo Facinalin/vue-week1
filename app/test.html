@@ -196,7 +196,7 @@ crossorigin='anonymous'></script>
   const api_Path = 'lk1025cina';
   //練習modal
   const modalBtn = document.getElementById('modalBtn');
-  modalBtn.addEventListener('click',(e)=>{
+    modalBtn.addEventListener('click',(e)=>{
     console.log('你有點到');
   })
 
@@ -243,18 +243,6 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
       this.products.splice(deleteId, 1);
       this.tempProduct = {};
     },
-    checkLogged(){
-      axios.post(`${api_Url}api/user/check`)
-        .then(res=>{
-            console.log(res.data);
-            this.ifLoggedIn = true;
-        })
-        .catch(err =>{
-            console.log(err.data);
-            alert('你尚未登入，無權限觀看產品。')
-            location.href = 'signIn.html';
-        })
-    },
     axiosGet(){
       //https://vue3-course-api.hexschool.io/v2/api/lk1025cina/products/all
       axios.get(`${api_Url}api/${api_Path}/products/all`)
@@ -274,7 +262,7 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
   //生命週期
   //畫面生成後擷取dom元素：mounted(){}
   created(){
-   this.checkLogged();
+   this.ifLoggedIn = true;
    //this.products = products;
    this.axiosGet();
   }
