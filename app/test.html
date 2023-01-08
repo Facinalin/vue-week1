@@ -212,8 +212,8 @@ crossorigin='anonymous'></script>
   const { createApp } = Vue;
   //外部引入資料
 
-const cookieToken = document.cookie.replace(/(?:(?:^|.*;\s*)signInToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-axios.defaults.headers.common['Authorization'] = cookieToken;
+// const cookieToken = document.cookie.replace(/(?:(?:^|.*;\s*)signInToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+// axios.defaults.headers.common['Authorization'] = cookieToken;
  //axios.get外部資料
  //Vue Option API 架構
  const App = {
