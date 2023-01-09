@@ -9,14 +9,14 @@ current: index
   <div id="app">
     <div class="container">
       <div class="text-end mt-4">
-        <button class="btn btn-primary" id="modalBtn">
+        <button type="button" class="btn btn-primary" id="modalBtn" @click="openModal">
           建立新的產品
         </button>
       </div>
       <table class="table mt-4">
         <thead>
           <tr>
-            <th width="120">
+            <th width="120" >
               分類
             </th>
             <th>產品名稱</th>
@@ -34,15 +34,15 @@ current: index
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody v-for="item in products">
           <tr>
-            <td></td>
-            <td></td>
-            <td class="text-end"></td>
-            <td class="text-end"></td>
+            <td> {{ item.category }} </td>
+            <td> {{ item.title }} </td>
+            <td> {{ item.origin_price }}</td>
+            <td> {{ item.price }}</td>
             <td>
-              <span class="text-success">啟用</span>
-              <span>未啟用</span>
+              <span class="text-success" v-if="item.is_enabled">啟用</span>
+              <span v-else="item.is_enabled">未啟用</span>
             </td>
             <td>
               <div class="btn-group">
@@ -74,51 +74,61 @@ current: index
               <div class="col-sm-4">
                 <div class="mb-2">
                   <div class="mb-3">
-                    <label for="imageUrl" class="form-label">輸入圖片網址</label>
+                    <label for="imageUrl" class="form-label">主要圖片</label>
                     <input type="text" class="form-control"
-                           placeholder="請輸入圖片連結">
+                           placeholder="請輸入圖片連結" v-model="tempProduct.imageUrl">
                   </div>
                   <img class="img-fluid" src="" alt="">
                 </div>
                 <div>
-                  <button class="btn btn-outline-primary btn-sm d-block w-100">
+                    <h3>多圖新增</h3>
+                    <div v-if="ifManyImages">
+                        <div class="mb-3">
+                        <label for="imageUrl" class="form-label">次要圖片</label>
+                        <input type="text" class="form-control"
+                               placeholder="請輸入圖片連結" v-model="imgsUrl">
+                        </div>
+                        <div class="morePic"></div>
+                     <button class="btn btn-outline-danger btn-sm d-block w-100 mb-5" @click="addUrlInput">
+                            再加一張
+                      </button>
+                      <button class="btn btn-outline-danger btn-sm d-block w-100" @click="hideImagesUrl">
+                        取消新增次要圖片
+                      </button>
+                    </div>
+                  <button class="btn btn-outline-primary btn-sm d-block w-100" @click="showImagesUrl" v-else="ifManyImages">
                     新增圖片
                   </button>
                 </div>
-                <!--這邊原本模板加上了v-else-->
-                <div>
-                  <button class="btn btn-outline-danger btn-sm d-block w-100">
-                    刪除圖片
-                  </button>
-                </div>
+
               </div>
               <div class="col-sm-8">
                 <div class="mb-3">
                   <label for="title" class="form-label">標題</label>
-                  <input id="title" type="text" class="form-control" placeholder="請輸入標題">
+                  <input id="title" type="text" class="form-control" placeholder="請輸入標題" v-model="tempProduct.title">
                 </div>
 
                 <div class="row">
                   <div class="mb-3 col-md-6">
                     <label for="category" class="form-label">分類</label>
                     <input id="category" type="text" class="form-control"
-                           placeholder="請輸入分類">
+                           placeholder="請輸入分類" v-model="tempProduct.category">
                   </div>
                   <div class="mb-3 col-md-6">
                     <label for="price" class="form-label">單位</label>
-                    <input id="unit" type="text" class="form-control" placeholder="請輸入單位">
+                    <input id="unit" type="text" class="form-control" placeholder="請輸入單位" v-model="tempProduct.unit">
                   </div>
                 </div>
 
                 <div class="row">
                   <div class="mb-3 col-md-6">
                     <label for="origin_price" class="form-label">原價</label>
-                    <input id="origin_price" type="number" min="0" class="form-control" placeholder="請輸入原價">
+                    <input id="origin_price" type="number" min="0" class="form-control" placeholder="請輸入原價" v-model="tempProduct.origin_price">
                   </div>
                   <div class="mb-3 col-md-6">
                     <label for="price" class="form-label">售價</label>
                     <input id="price" type="number" min="0" class="form-control"
-                           placeholder="請輸入售價">
+                           placeholder="請輸入售價" v-model="tempProduct.price">
                   </div>
                 </div>
                 <hr>
@@ -126,30 +136,32 @@ current: index
                 <div class="mb-3">
                   <label for="description" class="form-label">產品描述</label>
                   <textarea id="description" type="text" class="form-control"
-                            placeholder="請輸入產品描述">
+                            placeholder="請輸入產品描述" v-model="tempProduct.description">
                   </textarea>
                 </div>
                 <div class="mb-3">
                   <label for="content" class="form-label">說明內容</label>
                   <textarea id="description" type="text" class="form-control"
-                            placeholder="請輸入說明內容">
+                            placeholder="請輸入說明內容" v-model="tempProduct.content">
                   </textarea>
                 </div>
                 <div class="mb-3">
                   <div class="form-check">
                     <input id="is_enabled" class="form-check-input" type="checkbox"
-                           :true-value="1" :false-value="0">
+                           :true-value="1" :false-value="0" v-model="tempProduct.is_enabled">
                     <label class="form-check-label" for="is_enabled">是否啟用</label>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <!--data-bs-dismiss="modal"-->
+            <button type="button" class="btn btn-outline-secondary" @click="closeModal">
               取消
             </button>
-            <button type="button" class="btn btn-primary">
+            <button type="button" class="btn btn-primary" @click="closeModal, axiosPost(tempProduct)" id="confirmAddBtn">
               確認
             </button>
           </div>
@@ -192,19 +204,17 @@ crossorigin='anonymous'></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
 <script type="module">
-  const api_Url = 'https://vue3-course-api.hexschool.io/v2/';
+   const api_Url = 'https://vue3-course-api.hexschool.io/v2/';
   const api_Path = 'lk1025cina';
   //練習modal
   const modalBtn = document.getElementById('modalBtn');
-  modalBtn.addEventListener('click',(e)=>{
+    modalBtn.addEventListener('click',(e)=>{
     console.log('你有點到');
   })
-
+  //在此抓取觸發後才渲染的dom元素，是抓取不到的
+  let myModal = ""; //先以空字串宣告，，須在mounted時賦值
   
-  const test = document.querySelector('#modalBtn');
-  const modal = document.getElementById('productModal');
-  const myModal = new bootstrap.Modal(modal);
-  console.log(modalBtn, modal, myModal,test);
+  const test = document.querySelector('#test');
   //可用方法：myModal.toggle/ myModal.show/ myModal.hide
 
   //記得加上type="module"
@@ -225,7 +235,9 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
       //單一產品物件
       tempProduct:{},
       //是否登入
-      ifLoggedIn:false
+      ifLoggedIn:false,
+      ifManyImages:false,
+      imgsUrl:""
     }
   },
   //方法函式
@@ -243,18 +255,6 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
       this.products.splice(deleteId, 1);
       this.tempProduct = {};
     },
-    checkLogged(){
-      axios.post(`${api_Url}api/user/check`)
-        .then(res=>{
-            console.log(res.data);
-            this.ifLoggedIn = true;
-        })
-        .catch(err =>{
-            console.log(err.data);
-            alert('你尚未登入，無權限觀看產品。')
-            location.href = 'signIn.html';
-        })
-    },
     axiosGet(){
       //https://vue3-course-api.hexschool.io/v2/api/lk1025cina/products/all
       axios.get(`${api_Url}api/${api_Path}/products/all`)
@@ -266,17 +266,87 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
         console.log(err.data)
       })
     },
-    // openModal(){
-    //   myModal.show();
-    // }
-
+    openModal(){
+    console.log('有點到');
+    myModal.show();
+    },
+    closeModal(){
+    console.log('有關上');
+    myModal.hide();
+    },
+    showImagesUrl(){
+    console.log('想要新增更多圖片')
+    this.ifManyImages = true;
+    console.log(this.ifManyImages)
+    },
+    hideImagesUrl(){
+    this.ifManyImages = false;   
+    console.log('Been Hidden!')
+    },
+    addUrlInput(){
+    //點擊後渲染
+    console.log('想新增更多圖？')
+    const morePic = document.querySelector('.morePic');
+    let str = `<div class="mb-3 aidPic">
+                        <label for="imageUrl" class="form-label">次要圖片</label>
+                        <input type="text" class="form-control"
+                               placeholder="請輸入圖片連結" v-model="imgsUrl">
+                        </div>`;
+    morePic.innerHTML += str;
+    let aidPicsNodeList = document.querySelectorAll('.aidPic');
+    let aidPicsNodeLen = aidPicsNodeList.length;
+    console.log(aidPicsNodeLen);
+    if(aidPicsNodeLen>4){
+      alert('最多只能新增五張次要圖片！');
+      morePic.removeChild(aidPicsNodeList[aidPicsNodeLen-1]);
+    }
+    },
+    axiosPost(obj){
+      //https://vue3-course-api.hexschool.io/v2/api/lk1025cina/admin/product
+      axios.post(`${api_Url}api/${api_Path}/admin/product`,obj)
+      .then(res =>{
+        console.log(res.data);
+      })
+      .catch(err =>{
+        console.log(err.data);
+      })
+    },
+    checkLogged(){
+      axios.post(`${api_Url}api/user/check`)
+        .then(res=>{
+            console.log(res.data);
+            this.ifLoggedIn = true;
+        })
+        .catch(err =>{
+            console.log(err.data);
+            alert('你尚未登入，無權限觀看產品。')
+            location.href = 'signIn.html';
+        })
+    }
   },
   //生命週期
   //畫面生成後擷取dom元素：mounted(){}
-  created(){
-   this.checkLogged();
+  //像modal就會用到
+  mounted(){
+   //this.ifLoggedIn = true;
    //this.products = products;
+   //this.checkLogged();
    this.axiosGet();
+   //觸發後才渲染的時間順序的話，真正賦值要放在mounted
+   //類似說法：modal等觸發後才會渲染，所以待他渲染後才抓取得到該dom元素
+   const modal = document.getElementById('productModal');
+   myModal = new bootstrap.Modal(modal);
+   //確認新增產品-監聽事件
+   const confirmAddBtn = document.getElementById('confirmAddBtn');
+   confirmAddBtn.addEventListener('click',()=>{
+    this.tempProduct.imagesUrl = [];
+    this.tempProduct.imagesUrl.push(this.imgsUrl);
+    //這邊要條件判斷，然後用forEach，不會寫
+    //是不是每個渲染的都要加上id?
+    console.log(this.tempProduct);
+   })
+  
+   
   }
  }
 //生成元件，掛載到html元素
