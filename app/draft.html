@@ -11,6 +11,12 @@ current: index
         <div class="row py-3">
           <div class="col-md-7">
             <h2>產品列表</h2>
+            <div v-if="!checkSKZ">
+              <h4>Leeknow</h4>
+            </div>
+            <div v-else>
+              <h4>Seungmin</h4>
+            </div>
             <table class="table table-hover mt-4">
               <thead>
                 <tr>
@@ -89,6 +95,20 @@ current: index
   <!-- Button trigger modal -->
   <button type="button" class="btn btn-primary" @click="openModal()" data-bs-target="#exampleModal">
     Launch demo modal
+  </button>
+
+  <!--失敗modal區-->
+  <div class="mb-3" v-for="item in tempProduct.imagesUrl">
+    <label for="imageUrl" class="form-label">次要圖片</label>
+    <input type="text" class="form-control"
+           placeholder="請輸入圖片連結" v-model="item">
+    </div>
+    <div class="morePic"></div>
+ <button class="btn btn-outline-danger btn-sm d-block w-100 mb-5" @click="addUrlInput">
+        再加一張
+  </button>
+  <button class="btn btn-outline-danger btn-sm d-block w-100" @click="hideImagesUrl">
+    取消新增次要圖片
   </button>
   
   <!-- Modal -->
@@ -182,6 +202,23 @@ current: index
         "https://images.unsplash.com/flagged/photo-1557234985-425e10c9d7f1?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTA5fHxjYWtlfGVufDB8fDB8fA%3D%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=60",
         "https://images.unsplash.com/photo-1540337706094-da10342c93d8?ixid=MnwxMjA3fDB8MHxzZWFyY2h8NDR8fGNha2V8ZW58MHx8MHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=60"
       ]
+    },
+    {
+      category: "一般",
+      content: "2023 Stray Kids年曆組合包",
+      description: "韓國發貨7天後能到台",
+      id: "-McJ-VyqaFlLzUMmpPpm",
+      is_enabled: 1,
+      origin_price: 2700,
+      price: 2500,
+      title: "2023 Stray Kids Season Greetings",
+      unit: "組",
+      num: 15,
+      imageUrl: "https://images.unsplash.com/photo-1505253149613-112d21d9f6a9?ixid=MnwxMjA3fDB8MHxzZWFyY2h8NDZ8fGNha2V8ZW58MHx8MHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=60",
+      imagesUrl: [
+        "https://images.unsplash.com/flagged/photo-1557234985-425e10c9d7f1?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTA5fHxjYWtlfGVufDB8fDB8fA%3D%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=60",
+        "https://images.unsplash.com/photo-1540337706094-da10342c93d8?ixid=MnwxMjA3fDB8MHxzZWFyY2h8NDR8fGNha2V8ZW58MHx8MHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=60"
+      ]
     }
   ]
   const cookieToken = document.cookie.replace(/(?:(?:^|.*;\s*)signInToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
@@ -198,7 +235,8 @@ current: index
         tempProduct:{},
         //是否登入
         ifLoggedIn:false,
-        imagesUrl:[]
+        imagesUrl:[],
+        checkSKZ:false
       }
     },
     //方法函式
