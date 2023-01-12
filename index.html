@@ -61,7 +61,7 @@
             </th>
           </tr>
         </thead>
-        <tbody v-for="item in products">
+        <tbody v-for="item in products" :key="item.title">
           <tr>
             <td> {{ item.category }} </td>
             <td> {{ item.title }} </td>
@@ -73,10 +73,10 @@
             </td>
             <td>
               <div class="btn-group">
-                <button type="button" class="btn btn-outline-primary btn-sm">
+                <button type="button" class="btn btn-outline-primary btn-sm" :id="item.id" @click="editItem(item,$event)">
                   編輯
                 </button>
-                <button type="button" class="btn btn-outline-danger btn-sm">
+                <button type="button" class="btn btn-outline-danger btn-sm" :id="item.id" @click="openDeleteModal(item,$event)">
                   刪除
                 </button>
               </div>
@@ -92,7 +92,8 @@
         <div class="modal-content border-0">
           <div class="modal-header bg-dark text-white">
             <h5 id="productModalLabel" class="modal-title">
-              <span>新增產品</span>
+              <span v-if="ifProductExisted">編輯產品</span>
+              <span v-else="ifProductExisted">新增產品</span>
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -105,30 +106,51 @@
                     <input type="text" class="form-control"
                            placeholder="請輸入圖片連結" v-model="tempProduct.imageUrl">
                   </div>
-                  <img class="img-fluid" src="" alt="">
+                  <img class="img-fluid" :src="tempProduct.imageUrl" alt="">
                 </div>
+                <!--新增次要圖片區starts-->
                 <div>
                     <h3>多圖新增</h3>
-                    <div v-if="ifManyImages">
-                        <div class="mb-3">
-                        <label for="imageUrl" class="form-label">次要圖片</label>
-                        <input type="text" class="form-control"
-                               placeholder="請輸入圖片連結" v-model="imgsUrl">
-                        </div>
-                        <div class="morePic"></div>
-                     <button class="btn btn-outline-danger btn-sm d-block w-100 mb-5" @click="addUrlInput">
-                            再加一張
+                   <!--ifManyImageExisted-->
+                   <div v-if="Array.isArray(tempProduct.imagesUrl)">
+                    <!--數量會增加的渲染元素，可以將資料先定義為陣列，再來用v-for去指定每個索引值-->
+                    <div class="mb-1" v-for="(image, key) in tempProduct.imagesUrl" :key="key">
+                       <!--forEach的範圍-->
+                      <div class="mb-3">
+                        <label for="imageUrl" class="form-label">圖片網址</label>
+                        <input v-model="tempProduct.imagesUrl[key]" type="text" class="form-control"
+                          placeholder="請輸入圖片連結">
+                      </div>
+                      <img class="img-fluid" :src="image">
+                    </div>
+                    <!--前者：tempProduct.imagesUrl這個屬性尚未存在（新增產品）or後者：已知tempProduct.imagesUrl這個屬性存在了，找出這個陣列的最後一個索引-->
+                    <!--只要這個陣列還沒存在，或已經存在，就渲染新增圖片按鈕？？-->
+                    <div v-if="!tempProduct.imagesUrl.length || tempProduct.imagesUrl[tempProduct.imagesUrl.length - 1]">
+                      <button class="btn btn-outline-primary btn-sm d-block w-100"
+                        @click="tempProduct.imagesUrl.push('')">
+                        新增圖片
                       </button>
-                      <button class="btn btn-outline-danger btn-sm d-block w-100" @click="hideImagesUrl">
-                        取消新增次要圖片
+                       <!--push空陣列就是增加一個綁定v-model="tempProduct.imagesUrl[key]"的input元素-->
+                    </div>
+  
+                    <div v-else>
+                      <button class="btn btn-outline-danger btn-sm d-block w-100" @click="tempProduct.imagesUrl.pop()">
+                        刪除圖片
                       </button>
                     </div>
-                  <button class="btn btn-outline-primary btn-sm d-block w-100" @click="showImagesUrl" v-else="ifManyImages">
-                    新增圖片
-                  </button>
-                </div>
+                  </div>
+  
+                  <div v-else>
+                    <button class="btn btn-outline-primary btn-sm d-block w-100" @click="imgsUrlTempToData">
+                      新增圖片
+                    </button>
+                  </div>
+                 </div>
+
+
 
               </div>
+              <!--新增次要圖片區ends-->
               <div class="col-sm-8">
                 <div class="mb-3">
                   <label for="title" class="form-label">標題</label>
@@ -181,21 +203,25 @@
                 </div>
               </div>
 
-            </div>
+            
           </div>
+        </div>
           <div class="modal-footer">
             <!--data-bs-dismiss="modal"-->
             <button type="button" class="btn btn-outline-secondary" @click="closeModal">
               取消
             </button>
-            <button type="button" class="btn btn-primary" @click="closeModal, axiosPost(tempProduct)" id="confirmAddBtn">
+            <button v-if="ifProductExisted" type="button" class="btn btn-primary" @click="confirmPut">
+              確認
+            </button>
+            <button v-else="ifProductExisted" type="button" class="btn btn-primary" @click="imgsUrlTempToData">
               確認
             </button>
           </div>
         </div>
       </div>
     </div>
-
+ </div>
     <div id="delProductModal" ref="delProductModal" class="modal fade" tabindex="-1"
          aria-labelledby="delProductModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -214,7 +240,7 @@
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
               取消
             </button>
-            <button type="button" class="btn btn-danger">
+            <button type="button" class="btn btn-danger" @click="deleteItem()">
               確認刪除
             </button>
           </div>
@@ -240,6 +266,8 @@ crossorigin='anonymous'></script>
   })
   //在此抓取觸發後才渲染的dom元素，是抓取不到的
   let myModal = ""; //先以空字串宣告，，須在mounted時賦值
+  let deleteModal = '';
+
   
   const test = document.querySelector('#test');
   //可用方法：myModal.toggle/ myModal.show/ myModal.hide
@@ -260,11 +288,20 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
       //產品集合資料格式;
       products:[],
       //單一產品物件
-      tempProduct:{},
+      //有多種圖片的這種陣列資料格式，可以在宣告時就先定義好
+      tempProduct: {
+        imagesUrl: [],
+      },
       //是否登入
       ifLoggedIn:false,
       ifManyImages:false,
-      imgsUrl:""
+      imgsUrl:"",
+      imagesUrl:[],
+      curDeleteId:"",
+      curEditId:'',
+      ifProductExisted:false,
+      ifManyImageExisted:false,
+      
     }
   },
   //方法函式
@@ -275,17 +312,20 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
       this.tempProduct = { ...item };
       console.log(this.tempProduct);
     },
-    deleteItem(item){
+    deleteItem(){
+      //點擊的target以e為第二個參數傳入，第一個參數是自訂參數
       //找到該產品id在資料集中的索引index
-      alert('確認要刪除產品嗎？');
-      const deleteId = this.products.findIndex(el => el.id == item.id)
-      this.products.splice(deleteId, 1);
-      this.tempProduct = {};
+      // const deleteId = e.target.getAttribute('id')
+      // console.log(deleteId);
+      console.log(this.curDeleteId)
+      this.axiosDelete(this.curDeleteId);
     },
     axiosGet(){
       //https://vue3-course-api.hexschool.io/v2/api/lk1025cina/products/all
       axios.get(`${api_Url}api/${api_Path}/products/all`)
       .then(res=>{
+        console.log(res);
+        console.log(res.data);
         console.log(res.data.products);
         this.products = res.data.products;
       })
@@ -294,45 +334,27 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
       })
     },
     openModal(){
-    console.log('有點到');
     myModal.show();
     },
     closeModal(){
-    console.log('有關上');
     myModal.hide();
+    this.tempProduct = {};
     },
     showImagesUrl(){
-    console.log('想要新增更多圖片')
     this.ifManyImages = true;
-    console.log(this.ifManyImages)
+    console.log(this.ifManyImages);
+    console.log(this.ifManyImageExisted);
     },
     hideImagesUrl(){
     this.ifManyImages = false;   
-    console.log('Been Hidden!')
-    },
-    addUrlInput(){
-    //點擊後渲染
-    console.log('想新增更多圖？')
-    const morePic = document.querySelector('.morePic');
-    let str = `<div class="mb-3 aidPic">
-                        <label for="imageUrl" class="form-label">次要圖片</label>
-                        <input type="text" class="form-control"
-                               placeholder="請輸入圖片連結" v-model="imgsUrl">
-                        </div>`;
-    morePic.innerHTML += str;
-    let aidPicsNodeList = document.querySelectorAll('.aidPic');
-    let aidPicsNodeLen = aidPicsNodeList.length;
-    console.log(aidPicsNodeLen);
-    if(aidPicsNodeLen>4){
-      alert('最多只能新增五張次要圖片！');
-      morePic.removeChild(aidPicsNodeList[aidPicsNodeLen-1]);
-    }
     },
     axiosPost(obj){
       //https://vue3-course-api.hexschool.io/v2/api/lk1025cina/admin/product
-      axios.post(`${api_Url}api/${api_Path}/admin/product`,obj)
+      axios.post(`${api_Url}api/${api_Path}/admin/product`,{data:obj})
       .then(res =>{
         console.log(res.data);
+        alert('新增產品成功！')
+        location.reload();
       })
       .catch(err =>{
         console.log(err.data);
@@ -349,31 +371,85 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
             alert('你尚未登入，無權限觀看產品。')
             location.href = 'signIn.html';
         })
+    },
+    imgsUrlTempToData(){ 
+    //如果寫這樣會直接略過this.imgsUrl!==""後面有填的
+    //debt
+    this.tempProduct.imagesUrl = [];
+    this.tempProduct.imagesUrl.push("");
+    console.log(this.tempProduct.imagesUrl)
+    //清掉imagesUrl的空字串
+    this.axiosPost(this.tempProduct);
+    this.closeModal();
+    },
+    editItem(item,e){
+    const editId = e.target.getAttribute('id');
+    this.ifProductExisted = true;
+    this.openModal();
+    //叫出帶有預先填好資料的modal
+    //記得把manyimage改成true
+    let productIndex = this.products.findIndex(item => item.id == editId);
+    this.tempProduct = {...this.products[productIndex]}; 
+    if(this.tempProduct.hasOwnProperty("imagesUrl")){
+      this.ifManyImageExisted = true;
+      console.log(this.tempProduct.imagesUrl);
+      console.log('這個產品有次要圖片連結')
+      console.log(this.ifManyImages);
+    }
+    },
+    axiosDelete(deleteId){
+      //https://vue3-course-api.hexschool.io/v2/api/lk1025cina/admin/product/-NLLMQMff1huBcJV2I3f
+      axios.delete(`${api_Url}api/${api_Path}/admin/product/${deleteId}`)
+      .then(res=>{
+        console.log(res.data);
+        alert('成功刪除產品');
+        location.reload();
+      })
+      .catch(err =>{
+        console.log(err.data);
+      })
+    },
+    openDeleteModal(item,e){
+      deleteModal.show();
+      const deleteId = e.target.getAttribute('id')
+      this.curDeleteId = deleteId;
+    },
+    confirmPut(){
+      console.log('確認要送出更改？')
+      const putObj = this.tempProduct;
+      const putId = this.tempProduct.id;
+      console.log(putObj,putId)
+      this.axiosPut(putId,putObj);
+    },
+    axiosPut(id,obj){
+      axios.put(`${api_Url}api/${api_Path}/admin/product/${id}`,{data:obj})
+      .then(res =>{
+        console.log(res.data);
+        alert('成功更新產品！')
+        this.tempProduct = {};
+        location.reload();
+      })
+      .catch(err =>{
+        console.log(err.data);
+        console.log(this.tempProduct);
+      })
     }
   },
   //生命週期
   //畫面生成後擷取dom元素：mounted(){}
   //像modal就會用到
   mounted(){
-   //this.ifLoggedIn = true;
-   //this.products = products;
-   //this.checkLogged();
+   this.checkLogged();
    this.axiosGet();
    //觸發後才渲染的時間順序的話，真正賦值要放在mounted
    //類似說法：modal等觸發後才會渲染，所以待他渲染後才抓取得到該dom元素
+   //1.新增產品功能Modal
    const modal = document.getElementById('productModal');
    myModal = new bootstrap.Modal(modal);
-   //確認新增產品-監聽事件
-   const confirmAddBtn = document.getElementById('confirmAddBtn');
-   confirmAddBtn.addEventListener('click',()=>{
-    this.tempProduct.imagesUrl = [];
-    this.tempProduct.imagesUrl.push(this.imgsUrl);
-    //這邊要條件判斷，然後用forEach，不會寫
-    //是不是每個渲染的都要加上id?
-    console.log(this.tempProduct);
-   })
-  
-   
+   //2.刪除功能Modal
+   const delProductModal = document.getElementById('delProductModal');
+   deleteModal = new bootstrap.Modal(delProductModal);
+   console.log(deleteModal);
   }
  }
 //生成元件，掛載到html元素
