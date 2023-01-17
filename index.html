@@ -124,9 +124,8 @@
                       <img class="img-fluid" :src="image">
                     </div>
                     <!--前者：tempProduct.imagesUrl這個屬性尚未存在（新增產品）or後者：已知tempProduct.imagesUrl這個屬性存在了，找出這個陣列的最後一個索引-->
-                    <!--只要這個陣列還沒存在，或已經存在，就渲染新增圖片按鈕？？-->
                     <div v-if="!tempProduct.imagesUrl.length || tempProduct.imagesUrl[tempProduct.imagesUrl.length - 1]">
-                      <button class="btn btn-outline-primary btn-sm d-block w-100"
+                      <button type="button" class="btn btn-outline-primary btn-sm d-block w-100"
                         @click="tempProduct.imagesUrl.push('')">
                         新增圖片
                       </button>
@@ -134,14 +133,14 @@
                     </div>
   
                     <div v-else>
-                      <button class="btn btn-outline-danger btn-sm d-block w-100" @click="tempProduct.imagesUrl.pop()">
+                      <button type="button" class="btn btn-outline-danger btn-sm d-block w-100" @click="tempProduct.imagesUrl.pop()">
                         刪除圖片
                       </button>
                     </div>
                   </div>
   
                   <div v-else>
-                    <button class="btn btn-outline-primary btn-sm d-block w-100" @click="imgsUrlTempToData">
+                    <button type="button" class="btn btn-outline-primary btn-sm d-block w-100" @click="imgsUrlTempToData">
                       新增圖片
                     </button>
                   </div>
@@ -172,12 +171,12 @@
                 <div class="row">
                   <div class="mb-3 col-md-6">
                     <label for="origin_price" class="form-label">原價</label>
-                    <input id="origin_price" type="number" min="0" class="form-control" placeholder="請輸入原價" v-model="tempProduct.origin_price">
+                    <input id="origin_price" type="number" min="0" class="form-control" placeholder="請輸入原價" v-model.number="tempProduct.origin_price">
                   </div>
                   <div class="mb-3 col-md-6">
                     <label for="price" class="form-label">售價</label>
                     <input id="price" type="number" min="0" class="form-control"
-                           placeholder="請輸入售價" v-model="tempProduct.price">
+                           placeholder="請輸入售價" v-model.number="tempProduct.price">
                   </div>
                 </div>
                 <hr>
@@ -211,7 +210,7 @@
             <button type="button" class="btn btn-outline-secondary" @click="closeModal">
               取消
             </button>
-            <button v-if="ifProductExisted" type="button" class="btn btn-primary" @click="confirmPut">
+            <button v-if="ifProductExisted" type="button" class="btn btn-primary" @click="confirmEdit">
               確認
             </button>
             <button v-else="ifProductExisted" type="button" class="btn btn-primary" @click="imgsUrlTempToData">
@@ -221,7 +220,8 @@
         </div>
       </div>
     </div>
- </div>
+
+
     <div id="delProductModal" ref="delProductModal" class="modal fade" tabindex="-1"
          aria-labelledby="delProductModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -234,19 +234,20 @@
           </div>
           <div class="modal-body">
             是否刪除
-            <strong class="text-danger"></strong> 商品(刪除後將無法恢復)。
+            <strong class="text-danger">{{ products[dataDeleteId] }}</strong> (刪除後將無法恢復)。
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
               取消
             </button>
-            <button type="button" class="btn btn-danger" @click="deleteItem()">
+            <button type="button" class="btn btn-danger" @click="deleteProductApi">
               確認刪除
             </button>
           </div>
         </div>
       </div>
     </div>
+  </div>
     <!-- Modal -->
   </div>
 </div>
@@ -276,9 +277,6 @@ crossorigin='anonymous'></script>
   //引入Vue cdn 方法
   const { createApp } = Vue;
   //外部引入資料
-
-const cookieToken = document.cookie.replace(/(?:(?:^|.*;\s*)signInToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-axios.defaults.headers.common['Authorization'] = cookieToken;
  //axios.get外部資料
  //Vue Option API 架構
  const App = {
@@ -298,9 +296,12 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
       imgsUrl:"",
       imagesUrl:[],
       curDeleteId:"",
+      dataDeleteId:"",
       curEditId:'',
       ifProductExisted:false,
       ifManyImageExisted:false,
+      api_Url:'https://vue3-course-api.hexschool.io/v2/',
+      api_Path:'lk1025cina'
       
     }
   },
@@ -310,27 +311,15 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
     viewProductDetail(item){
       //使用物件淺拷貝：避免物件傳參考
       this.tempProduct = { ...item };
-      console.log(this.tempProduct);
     },
-    deleteItem(){
-      //點擊的target以e為第二個參數傳入，第一個參數是自訂參數
-      //找到該產品id在資料集中的索引index
-      // const deleteId = e.target.getAttribute('id')
-      // console.log(deleteId);
-      console.log(this.curDeleteId)
-      this.axiosDelete(this.curDeleteId);
-    },
-    axiosGet(){
+    getProductApi(){
       //https://vue3-course-api.hexschool.io/v2/api/lk1025cina/products/all
-      axios.get(`${api_Url}api/${api_Path}/products/all`)
+      axios.get(`${this.api_Url}api/${this.api_Path}/products/all`)
       .then(res=>{
-        console.log(res);
-        console.log(res.data);
-        console.log(res.data.products);
         this.products = res.data.products;
       })
       .catch(err=>{
-        console.log(err.data)
+        alert('無法取得產品資料，請確認是否已經登入！')
       })
     },
     openModal(){
@@ -342,17 +331,15 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
     },
     showImagesUrl(){
     this.ifManyImages = true;
-    console.log(this.ifManyImages);
-    console.log(this.ifManyImageExisted);
     },
     hideImagesUrl(){
     this.ifManyImages = false;   
     },
-    axiosPost(obj){
+    postProductApi(obj){
       //https://vue3-course-api.hexschool.io/v2/api/lk1025cina/admin/product
-      axios.post(`${api_Url}api/${api_Path}/admin/product`,{data:obj})
+      axios.post(`${this.api_Url}api/${this.api_Path}/admin/product`,{data:obj})
       .then(res =>{
-        console.log(res.data);
+        this.closeModal();
         alert('新增產品成功！')
         location.reload();
       })
@@ -361,10 +348,10 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
       })
     },
     checkLogged(){
-      axios.post(`${api_Url}api/user/check`)
+      axios.post(`${this.api_Url}api/user/check`)
         .then(res=>{
-            console.log(res.data);
             this.ifLoggedIn = true;
+            this.getProductApi();
         })
         .catch(err =>{
             console.log(err.data);
@@ -377,31 +364,21 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
     //debt
     this.tempProduct.imagesUrl = [];
     this.tempProduct.imagesUrl.push("");
-    console.log(this.tempProduct.imagesUrl)
     //清掉imagesUrl的空字串
-    this.axiosPost(this.tempProduct);
-    this.closeModal();
+    this.postProductApi(this.tempProduct);
     },
     editItem(item,e){
-    const editId = e.target.getAttribute('id');
+    console.log(item);
+    this.tempProduct = {...item};
     this.ifProductExisted = true;
     this.openModal();
     //叫出帶有預先填好資料的modal
     //記得把manyimage改成true
-    let productIndex = this.products.findIndex(item => item.id == editId);
-    this.tempProduct = {...this.products[productIndex]}; 
-    if(this.tempProduct.hasOwnProperty("imagesUrl")){
-      this.ifManyImageExisted = true;
-      console.log(this.tempProduct.imagesUrl);
-      console.log('這個產品有次要圖片連結')
-      console.log(this.ifManyImages);
-    }
     },
-    axiosDelete(deleteId){
-      //https://vue3-course-api.hexschool.io/v2/api/lk1025cina/admin/product/-NLLMQMff1huBcJV2I3f
-      axios.delete(`${api_Url}api/${api_Path}/admin/product/${deleteId}`)
+    deleteProductApi(){
+      https://vue3-course-api.hexschool.io/v2/api/lk1025cina/admin/product/-NLLMQMff1huBcJV2I3f
+      axios.delete(`${this.api_Url}api/${this.api_Path}/admin/product/${this.curDeleteId}`)
       .then(res=>{
-        console.log(res.data);
         alert('成功刪除產品');
         location.reload();
       })
@@ -412,26 +389,26 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
     openDeleteModal(item,e){
       deleteModal.show();
       const deleteId = e.target.getAttribute('id')
-      this.curDeleteId = deleteId;
+      this.curDeleteId = deleteId; //api的index
+      const deleteIn = this.products.findIndex(item => item.id === deleteId); //products的index
+      this.dataDeleteId = deleteIn;
+      console.log(deleteIn,this.curDeleteId)
     },
-    confirmPut(){
-      console.log('確認要送出更改？')
+    confirmEdit(){
       const putObj = this.tempProduct;
       const putId = this.tempProduct.id;
-      console.log(putObj,putId)
-      this.axiosPut(putId,putObj);
+      this.editProductApi(putId,putObj);
     },
-    axiosPut(id,obj){
-      axios.put(`${api_Url}api/${api_Path}/admin/product/${id}`,{data:obj})
+    editProductApi(id,obj){
+      axios.put(`${this.api_Url}api/${this.api_Path}/admin/product/${id}`,{data:obj})
       .then(res =>{
-        console.log(res.data);
+        this.closeModal();
         alert('成功更新產品！')
         this.tempProduct = {};
         location.reload();
       })
       .catch(err =>{
         console.log(err.data);
-        console.log(this.tempProduct);
       })
     }
   },
@@ -439,8 +416,10 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
   //畫面生成後擷取dom元素：mounted(){}
   //像modal就會用到
   mounted(){
+  //cookie檢驗宣告建議放在mounted中
+  const cookieToken = document.cookie.replace(/(?:(?:^|.*;\s*)signInToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+  axios.defaults.headers.common['Authorization'] = cookieToken;
    this.checkLogged();
-   this.axiosGet();
    //觸發後才渲染的時間順序的話，真正賦值要放在mounted
    //類似說法：modal等觸發後才會渲染，所以待他渲染後才抓取得到該dom元素
    //1.新增產品功能Modal
@@ -449,7 +428,6 @@ axios.defaults.headers.common['Authorization'] = cookieToken;
    //2.刪除功能Modal
    const delProductModal = document.getElementById('delProductModal');
    deleteModal = new bootstrap.Modal(delProductModal);
-   console.log(deleteModal);
   }
  }
 //生成元件，掛載到html元素
