@@ -343,6 +343,11 @@ crossorigin='anonymous'></script>
     editItem(item,e){
     console.log(item);
     this.tempProduct = {...item};
+    const ifManyImgs = this.tempProduct.imagesUrl.findIndex(item => item === '');
+    //把this.tempProduct.imagesUrl內含有空字串的清理掉成空陣列
+    if(ifManyImgs!==-1){
+      this.tempProduct.imagesUrl.splice(ifManyImgs,1);
+    }
     this.ifProductExisted = true;
     this.openModal();
     //叫出帶有預先填好資料的modal
