@@ -28,15 +28,15 @@ current: index
             <form id="form" class="form-signin">
               <div class="form-floating mb-3">
                 <input type="email" class="form-control" id="username"
-                  placeholder="name@example.com" required autofocus>
+                  placeholder="name@example.com" v-model="perUser.username" required autofocus>
                 <label for="username">Email address</label>
               </div>
               <div class="form-floating">
                 <input type="password" class="form-control" id="password"
-                  placeholder="Password" required>
+                  placeholder="Password" v-model="perUser.password" required>
                 <label for="password">Password</label>
               </div>
-              <button class="btn btn-lg btn-primary w-100 mt-3" type="button" id="loginBtn">
+              <button class="btn btn-lg btn-primary w-100 mt-3" type="button" @click="getLoginInput">
                 登入
               </button>
             </form>
@@ -63,24 +63,21 @@ crossorigin="anonymous"></script> -->
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
 <script type="module">
-    //axios api測試
-    const api_Url = 'https://vue3-course-api.hexschool.io/v2/';
-    const api_Path = 'lk1025cina';
-
-    //綁定監聽事件
-    const loginBtn = document.querySelector('#loginBtn');
-    const passWord = document.querySelector('#password');
-    const userName = document.querySelector('#username');
-
-    loginBtn.addEventListener('click',(e)=>{
-        const accInput = userName.value;
-        const pswInput = passWord.value;
-        const perUser = {
-            "username":accInput, 
-            "password":pswInput, 
-        }
-
-    axios.post(`${api_Url}admin/signin`, perUser)
+//Vue{
+const { createApp } = Vue;
+const app = Vue.createApp({
+  data(){
+    return {
+      api_Url:'https://vue3-course-api.hexschool.io/v2/',
+      perUser:{
+        username:'',
+        password:''
+      }
+    }
+  },
+  methods:{
+    getLoginInput(){
+      axios.post(`${this.api_Url}admin/signin`, this.perUser)
     .then((res)=>{
         console.log(res.data);
         console.log(res.data.message);
@@ -93,15 +90,19 @@ crossorigin="anonymous"></script> -->
         console.log(cookieToken);
         //有加上defaults代表：每次都會帶入
         //登入後的微調
-        ifLoggedIn();
+        this.ifLoggedIn();
     })
     .catch((err)=>{
         console.log(err.data);
     })
-    })
-
-    function ifLoggedIn(){
+    },
+    ifLoggedIn(){
         alert('登入成功！');
         location.href = 'index.html';
     }
+  }
+});
+
+app.mount('#app')
+
 </script>
